@@ -37,9 +37,10 @@ into a web application for future Augmented Reality (AR) experiences.
 
 | Layer | Choice |
 |-------|--------|
-| Framework | Next.js 15, React 19, TypeScript |
+| Framework | Next.js 16, React 19, TypeScript |
 | 3D Rendering | Three.js, React Three Fiber, @react-three/drei |
 | Styling | Tailwind CSS |
+| Package Manager | pnpm |
 | Deployment | Vercel |
 
 ---
@@ -53,7 +54,7 @@ butterfly.glb
 React Three Fiber (useGLTF + Canvas)
       │
       ▼
-Next.js 15 Web Application
+Next.js 16 Web Application
       │
  ┌────┴────┐
  ▼         ▼
@@ -73,30 +74,38 @@ ARCore (Android) / ARKit (iOS) / Vision Pro
 > **Agent note:** Create every file listed here. Files marked `← new` were
 > added in the refinement pass to address loading states, error handling,
 > and accessibility.
+> 
+> **Project note:** This project uses the root-level `app/` directory (Next.js App Router, no `src/` folder).
+> The import alias is `@/*` pointing to the project root (`./*`). 
+> `app/` already contains `globals.css`, `layout.tsx`, `page.tsx`, and `favicon.ico`.
+> `public/models/butterfly.glb` already exists.
 
 ```
-src/
-├── app/
-│   └── page.tsx                        # Responsive homepage
-│
-├── components/
-│   ├── ButterflyViewer.tsx             # 3D canvas + controls
-│   ├── ModelErrorBoundary.tsx          # ← new: error fallback
-│   ├── SpeciesInfo.tsx                 # Metadata panel
-│   └── ARInfoModal.tsx                 # AR explanation modal
-│
-├── data/
-│   └── species.ts                      # Static species metadata
-│
-├── hooks/
-│   └── usePrefersReducedMotion.ts      # ← new: a11y hook
-│
-└── types/
-    └── species.ts                      # Species TypeScript type
+app/
+├── page.tsx                            # Responsive homepage (UPDATE THIS)
+├── layout.tsx
+├── globals.css
+└── favicon.ico
+
+components/                            # ← Create this directory
+├── ButterflyViewer.tsx                # 3D canvas + controls
+├── ModelErrorBoundary.tsx             # ← new: error fallback
+├── SpeciesInfo.tsx                    # Metadata panel
+└── ARInfoModal.tsx                    # AR explanation modal
+
+data/                                  # ← Create this directory
+└── species.ts                         # Static species metadata
+
+hooks/                                 # ← Create this directory
+└── usePrefersReducedMotion.ts         # ← new: a11y hook
+
+types/                                 # ← Create this directory
+└── species.ts                         # Species TypeScript type
 
 public/
-└── models/
-    └── butterfly.glb                   # 3D model (sourced separately)
+├── models/
+│   └── butterfly.glb                  # ✅ Already present
+└── (other public assets)
 ```
 
 ---
@@ -149,14 +158,14 @@ Validate before deploying: https://gltf.report
 - [ ] Auto-rotate stops when `prefers-reduced-motion` is active
 - [ ] No console errors
 
-#### Implementation: `src/components/ButterflyViewer.tsx`
+#### Implementation: `components/ButterflyViewer.tsx`
 
 ```tsx
 import { Suspense } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls, useGLTF, Html, Center } from '@react-three/drei'
 import ModelErrorBoundary from './ModelErrorBoundary'
-import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 function ButterflyModel() {
   const { scene } = useGLTF('/models/butterfly.glb')
@@ -195,7 +204,7 @@ export default function ButterflyViewer() {
 }
 ```
 
-#### Implementation: `src/components/ModelErrorBoundary.tsx`
+#### Implementation: `components/ModelErrorBoundary.tsx`
 
 ```tsx
 import { Component, ReactNode } from 'react'
@@ -230,13 +239,13 @@ export default class ModelErrorBoundary extends Component<Props, State> {
 
 **Requirements:**
 - Display all metadata fields
-- Typed via `Species` interface from `src/types/species.ts`
+- Typed via `Species` interface from `types/species.ts`
 
 **Acceptance criteria:**
 - [ ] All six fields render correctly
 - [ ] Component accepts a `Species` prop — no hardcoded strings inside JSX
 
-#### Type: `src/types/species.ts`
+#### Type: `types/species.ts`
 
 ```ts
 export interface Species {
@@ -249,10 +258,10 @@ export interface Species {
 }
 ```
 
-#### Data: `src/data/species.ts`
+#### Data: `data/species.ts`
 
 ```ts
-import { Species } from '../types/species'
+import { Species } from '@/types/species'
 
 export const butterflyData: Species = {
   commonName: 'Lime Swallowtail',
@@ -327,7 +336,7 @@ Mobile (below `md`):
 - [ ] `autoRotate` is `false` when OS reduced motion is enabled
 - [ ] No SSR errors from `window.matchMedia`
 
-#### Implementation: `src/hooks/usePrefersReducedMotion.ts`
+#### Implementation: `hooks/usePrefersReducedMotion.ts`
 
 ```ts
 import { useEffect, useState } from 'react'
@@ -382,43 +391,45 @@ export function usePrefersReducedMotion(): boolean {
 
 ### Task 1 — Initialise project
 
-```bash
-npx create-next-app@latest . \
-  --typescript \
-  --tailwind \
-  --app \
-  --src-dir \
-  --import-alias "@/*"
-```
+✅ **Already complete.** This project has been scaffolded with:
+- Next.js 16 (App Router, no `src/` folder)
+- TypeScript
+- Tailwind CSS
+- Import alias `@/*` → `./*` (root)
+- pnpm as package manager
 
-Done when: `npm run dev` serves the default Next.js page without errors.
+Verify by running: `pnpm dev` — should serve the default Next.js page without errors.
 
 ---
 
 ### Task 2 — Install dependencies
 
 ```bash
-npm install three @react-three/fiber @react-three/drei
-npm install --save-dev @types/three
+pnpm add three @react-three/fiber @react-three/drei
+pnpm add -D @types/three
 ```
 
-Done when: `npm run build` completes with no TypeScript errors.
+Done when: `pnpm build` completes with no TypeScript errors.
 
 ---
 
 ### Task 3 — Source and place GLB model
 
-1. Download a butterfly GLB from one of the sources in [GLB Model Sourcing](#glb-model-sourcing).
-2. Optimize: `gltf-pipeline -i butterfly.glb -o butterfly-optimized.glb --draco.compressionLevel 7`
-3. Place at `public/models/butterfly.glb`.
+✅ **Already complete.** The butterfly model exists at `public/models/butterfly.glb`.
 
-Done when: `http://localhost:3000/models/butterfly.glb` returns the file (HTTP 200).
+Verify: `http://localhost:3000/models/butterfly.glb` returns the file with HTTP 200.
+
+*(Optional: If you want to re-optimize the model using Draco compression:)*
+```bash
+npm install -g gltf-pipeline
+gltf-pipeline -i public/models/butterfly.glb -o public/models/butterfly-optimized.glb --draco.compressionLevel 7
+```
 
 ---
 
 ### Task 4 — Create types and data
 
-Create `src/types/species.ts` and `src/data/species.ts` using the snippets in Feature 2.
+Create `types/species.ts` and `data/species.ts` using the snippets in Feature 2.
 
 Done when: TypeScript compiles without errors.
 
@@ -426,7 +437,7 @@ Done when: TypeScript compiles without errors.
 
 ### Task 5 — Create `usePrefersReducedMotion` hook
 
-Create `src/hooks/usePrefersReducedMotion.ts` using the snippet in Feature 3a.
+Create `hooks/usePrefersReducedMotion.ts` using the snippet in Feature 3a.
 
 Done when: Hook exports correctly and TypeScript is satisfied.
 
@@ -434,7 +445,7 @@ Done when: Hook exports correctly and TypeScript is satisfied.
 
 ### Task 6 — Create `ModelErrorBoundary`
 
-Create `src/components/ModelErrorBoundary.tsx` using the snippet in Feature 1.
+Create `components/ModelErrorBoundary.tsx` using the snippet in Feature 1.
 
 Done when: Component renders a gray cube when `hasError` is `true`.
 
@@ -442,7 +453,7 @@ Done when: Component renders a gray cube when `hasError` is `true`.
 
 ### Task 7 — Create `ButterflyViewer`
 
-Create `src/components/ButterflyViewer.tsx` using the snippet in Feature 1.
+Create `components/ButterflyViewer.tsx` using the snippet in Feature 1.
 
 Done when: Model loads in the browser, OrbitControls work, and the loading
 fallback is visible briefly before the model appears.
@@ -451,7 +462,7 @@ fallback is visible briefly before the model appears.
 
 ### Task 8 — Create `SpeciesInfo`
 
-Create `src/components/SpeciesInfo.tsx`. It must:
+Create `components/SpeciesInfo.tsx`. It must:
 - Accept a `species: Species` prop
 - Render all fields from the `Species` type
 - Use Tailwind for styling
@@ -462,7 +473,7 @@ Done when: All metadata fields render in the browser.
 
 ### Task 9 — Create `ARInfoModal`
 
-Create `src/components/ARInfoModal.tsx`. It must:
+Create `components/ARInfoModal.tsx`. It must:
 - Accept `isOpen: boolean` and `onClose: () => void` props
 - Render the modal copy from Feature 4
 - Close on overlay click and close button click
@@ -473,8 +484,8 @@ Done when: Modal opens and closes correctly on both desktop and mobile.
 
 ### Task 10 — Assemble `page.tsx`
 
-Wire all components together in `src/app/page.tsx` using the Tailwind layout
-from Feature 3. Import `butterflyData` from `src/data/species.ts`.
+Wire all components together in `app/page.tsx` using the Tailwind layout
+from Feature 3. Import `butterflyData` from `@/data/species`.
 
 Done when: Full page renders with 3D viewer + metadata + AR button working.
 
@@ -483,8 +494,10 @@ Done when: Full page renders with 3D viewer + metadata + AR button working.
 ### Task 11 — Deploy to Vercel
 
 ```bash
-npx vercel --prod
+pnpm dlx vercel --prod
 ```
+
+(Or: `npx vercel --prod` if you prefer npx)
 
 Copy the production URL and share it with the mobile team. Done when: The production URL loads the app without errors and the GLB model is served from the Vercel CDN.
 
