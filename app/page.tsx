@@ -5,9 +5,9 @@ import { butterflyData } from "@/data/species";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-black font-roboto">
+    <div className="min-h-screen flex flex-col md:flex-row bg-white  font-roboto">
       {/* 3D Viewer Section */}
-      <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-gray-100 dark:bg-gray-900 relative">
+      <div className="w-full md:w-1/2 h-[50vh] md:h-screen bg-gray-100  relative">
         <ButterflyViewer />
       </div>
 
